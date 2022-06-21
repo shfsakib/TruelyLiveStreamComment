@@ -61,8 +61,9 @@ export default function Home({ navData, footerData, videoData, profileData, toke
     window.addEventListener('resize', () => {
       setWindowSize(window.innerWidth)
     })
-    document.getElementById('usersComments').style.height = document.getElementById('streamingVideo').scrollHeight - 150 + 'px';
     document.getElementById('streamRow').style.maxHeight = document.getElementById('streamingVideo').scrollHeight + 'px';
+    scrollChatMiddle();
+
   }, [windowSize])
   const handleComment = (text) => {
     console.log('enter', text);
@@ -70,6 +71,8 @@ export default function Home({ navData, footerData, videoData, profileData, toke
   }
   const handleCommentMenu = () => {
     document.getElementById('usersComments').style.height = document.getElementById('streamingVideo').scrollHeight - 150 + 'px';
+    scrollChatMiddle();
+
     setSideMenu(!sideMenu)
   }
   return (
@@ -80,7 +83,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
       </Head>
       <Navbar navData={navData} className={'position-relative'} />
       <div className="row" id='streamRow'>
-        <div className={`video-left-div ${!sideMenu && 'close'}`}>
+        <div className={`video-left-div`}>
           <video
             // src={videoData?.videoURL}
             src={"http://techslides.com/demos/sample-videos/small.mp4"}
@@ -106,6 +109,10 @@ export default function Home({ navData, footerData, videoData, profileData, toke
           </div>
           <div className="comment-bottom">
             <div id='usersComments' className="users-comments">
+              <Comments />
+              <Comments />
+              <Comments />
+              <Comments />
               <Comments />
             </div>
             <div className="comment-section">
