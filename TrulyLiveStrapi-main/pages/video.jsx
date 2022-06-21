@@ -13,6 +13,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
   const [windowSize, setWindowSize] = useState(null);
   const [sideMenu, setSideMenu] = useState(false);
   const [windowWidth, setWindowWidth] = useState(0);
+  const [hideDrop, setHideDrop] = useState(null);
 
   useEffect(() => {
     setWindowWidth([window.innerWidth])
@@ -61,7 +62,6 @@ export default function Home({ navData, footerData, videoData, profileData, toke
     window.addEventListener('resize', () => {
       setWindowSize(window.innerWidth)
     })
-    document.getElementById('streamRow').style.maxHeight = document.getElementById('streamingVideo').scrollHeight + 'px';
     scrollChatMiddle();
 
   }, [windowSize])
@@ -72,8 +72,8 @@ export default function Home({ navData, footerData, videoData, profileData, toke
   const handleCommentMenu = () => {
     document.getElementById('usersComments').style.height = document.getElementById('streamingVideo').scrollHeight - 150 + 'px';
     scrollChatMiddle();
-
-    setSideMenu(!sideMenu)
+    setSideMenu(!sideMenu);
+    hideDrop === null ? setHideDrop(false) : setHideDrop(!hideDrop);
   }
   return (
     <>
@@ -83,7 +83,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
       </Head>
       <Navbar navData={navData} className={'position-relative'} />
       <div className="row" id='streamRow'>
-        <div className={`video-left-div`}>
+        <div className={`video-left-div  ${!sideMenu && 'close'} ${hideDrop && 'hide'}`}>
           <video
             // src={videoData?.videoURL}
             src={"http://techslides.com/demos/sample-videos/small.mp4"}
@@ -94,6 +94,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
             autoPlay
             poster={videoData?.videoThumbnail?.data?.attributes?.url}
           />
+          <button className={`comment-button btn btn-primary ${!sideMenu && 'd-none'}`} onClick={handleCommentMenu}><i className="fas fa-comment fa-lg"></i></button>
         </div>
         <div className={`comments-div ${sideMenu && 'close'}`}>
           <div className="comment-top">
@@ -102,7 +103,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
                 <span className='title'>Comments</span>
               </div>
               <div className="col-4 text-right">
-                <a className='btn btn-primary' onClick={handleCommentMenu}>Hide</a>
+                <a className='btn text-white pt-0' onClick={handleCommentMenu}><i className="fas fa-times fa-lg"></i></a>
               </div>
             </div>
             <hr />
@@ -131,7 +132,6 @@ export default function Home({ navData, footerData, videoData, profileData, toke
           </div>
         </div>
       </div>
-      <button className={`comment-button btn btn-primary ${!sideMenu && 'd-none'}`} onClick={handleCommentMenu}><i className="fas fa-comment fa-lg"></i></button>
       <Footer footerData={footerData} />
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
       />

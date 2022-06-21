@@ -218,26 +218,48 @@ details[open] .faq-ans {
 .position-relative {
   position: relative !important;
 }
+#streamRow {
+  overflow: hidden;
+  height: 700px;
+  background-color: rgba(0, 0, 0, 0.8);
+}
 .video-left-div {
   width: calc(100%) !important;
+  height: 700px;
   padding: 0 !important;
   position: relative;
+  z-index: 20;
+}
+.video-left-div.hide {
+  transition: 0.4s all ease;
+}
+.video-left-div.close {
+  width: calc(100% - 350px) !important;
+  height: 700px;
+  padding: 0 !important;
+  position: relative;
+  transition: 0.4s all ease;
+}
+.video-left-div video {
+  max-height: 100% !important;
+  object-fit: fill;
 }
 /* comments */
 .comments-div.close {
-  position: fixed;
-  bottom: -1360px;
-  transition: 0.4s all ease;
+  /* right: -360px; */
+  transition: 0.5s all ease;
+  z-index: -1;
 }
 .comments-div {
   background-color: rgba(0, 0, 0, 0.8);
-  height: auto;
-  position: fixed;
-  bottom: 0;
-  right: 0;
+  position: absolute;
+  height: 700px;
   width: 350px !important;
   padding: 10px;
-  transition: 0.4s all ease;
+  right: 0;
+  z-index: 1;
+
+  /* transition: 0.5s all ease; */
 }
 .comments-div .comment-top {
   height: 70px;
@@ -251,7 +273,7 @@ details[open] .faq-ans {
   padding: 0;
 }
 .comments-div .comment-bottom .users-comments {
-  height: calc(500px) !important;
+  height: calc(500px) ;
   overflow-y: auto;
 }
 .comments-div .comment-bottom .comment-section {
@@ -296,12 +318,13 @@ details[open] .faq-ans {
   color: gainsboro;
 }
 .comment-button {
-  position: fixed;
-  bottom: 20px;
+  position: absolute;
+  bottom: 80px;
   right: 20px;
   height: 50px;
   width: 50px;
   border-radius: 50% !important;
+  z-index: 99;
 }
 /* comment scroll design */
 #usersComments::-webkit-scrollbar {
@@ -322,6 +345,26 @@ details[open] .faq-ans {
   background: #555;
 }
 /* end */
+@media screen and (min-width: 0) and (max-width: 992px) {
+  #streamRow {
+    display: block;
+    height: 800px!important;
+  }
+  .video-left-div.close {
+    height: 350px;
+    min-width: 100%;
+  }
+  .video-left-div video{
+    min-height: 350px!important;
+  }
+  .comments-div{
+    height: 450px;
+    width: 100%!important;
+  }
+  .comments-div .users-comments{
+    height: 300px!important;
+  }
+}
 @media (max-width: 768px) {
   .factbox {
     width: 100%;
