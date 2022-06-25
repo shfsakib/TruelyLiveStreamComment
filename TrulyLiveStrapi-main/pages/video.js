@@ -8,13 +8,13 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Comments from '../components/comments'
 import InputEmoji from 'react-input-emoji'
 
-export default function Home({ navData, footerData, videoData, profileData, token }) {
+export default function Home({ navData, footerData, videoData, profileData, token, eventData }) {
   const [text, setText] = useState('')
   const [windowSize, setWindowSize] = useState(null);
   const [sideMenu, setSideMenu] = useState(false);
   const [windowWidth, setWindowWidth] = useState(0);
   const [hideDrop, setHideDrop] = useState(null);
-
+  console.log(eventData && eventData);
   useEffect(() => {
     setWindowWidth([window.innerWidth])
     window.addEventListener("resize", changeWindowWidth);
@@ -150,7 +150,8 @@ export const getServerSideProps = async ({ req }) => {
   const navData = await navRes.json()
   const footerRes = await fetch(`${baseUrl}/footers?populate=*`)
   const footerData = await footerRes.json()
-
+  const eventRes = await fetch(`${baseUrl}/events?populate=*`)
+  const eventData = await eventRes.json()
   if (!token) {
     return {
       redirect: {
@@ -172,6 +173,7 @@ export const getServerSideProps = async ({ req }) => {
       navData: navData.data[0].attributes,
       videoData: videoData.data[0].attributes,
       footerData: footerData.data[0].attributes,
+      eventData: eventData.data[0].attributes,
       token,
       profileData: data
     }

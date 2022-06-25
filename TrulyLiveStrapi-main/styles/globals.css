@@ -16,7 +16,7 @@ body {
 
 a {
   color: unset;
-  text-decoration: none;
+  text-decoration: none !important;
   cursor: pointer;
   width: unset;
 }
@@ -273,7 +273,7 @@ details[open] .faq-ans {
   padding: 0;
 }
 .comments-div .comment-bottom .users-comments {
-  height: calc(500px) ;
+  height: calc(500px);
   overflow-y: auto;
 }
 .comments-div .comment-bottom .comment-section {
@@ -344,25 +344,40 @@ details[open] .faq-ans {
 #usersComments::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+/* emoji box */
+
+.react-emoji-picker--wrapper {
+  z-index: 1000 !important;
+  overflow: visible !important;
+  width: 305px !important;
+}
 /* end */
+@media screen and (min-width: 993px) and (max-width: 1245px) {
+  .video-left-div video {
+    height: 700px !important;
+  }
+}
 @media screen and (min-width: 0) and (max-width: 992px) {
   #streamRow {
     display: block;
-    height: 800px!important;
+    height: auto !important;
+  }
+  .video-left-div.false {
+    height: 350px !important;
   }
   .video-left-div.close {
     height: 350px;
     min-width: 100%;
   }
-  .video-left-div video{
-    min-height: 350px!important;
+  .video-left-div video {
+    min-height: 350px !important;
   }
-  .comments-div{
+  .comments-div {
     height: 450px;
-    width: 100%!important;
+    width: 100% !important;
   }
-  .comments-div .users-comments{
-    height: 300px!important;
+  .comments-div .users-comments {
+    height: 300px !important;
   }
 }
 @media (max-width: 768px) {
