@@ -7,14 +7,16 @@ import cookie from 'cookie'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Comments from '../components/comments'
 import InputEmoji from 'react-input-emoji'
+import { useRouter } from 'next/router'
 
 export default function Home({ navData, footerData, videoData, profileData, token, eventData }) {
+  let router = useRouter();
   const [text, setText] = useState('')
   const [windowSize, setWindowSize] = useState(null);
   const [sideMenu, setSideMenu] = useState(false);
   const [windowWidth, setWindowWidth] = useState(0);
   const [hideDrop, setHideDrop] = useState(null);
-  console.log(eventData && eventData);
+
   useEffect(() => {
     setWindowWidth([window.innerWidth])
     window.addEventListener("resize", changeWindowWidth);
@@ -23,6 +25,11 @@ export default function Home({ navData, footerData, videoData, profileData, toke
   useEffect(() => {
     triggerSideBar();
   }, [windowWidth]);
+  useEffect(() => {
+    console.log(router);
+    console.log(videoData);
+    console.log(eventData);
+  }, []);
 
   const changeWindowWidth = () => {
     setWindowWidth([window.innerWidth]);
@@ -85,8 +92,8 @@ export default function Home({ navData, footerData, videoData, profileData, toke
       <div className="row" id='streamRow'>
         <div className={`video-left-div  ${!sideMenu && 'close'} ${hideDrop && 'hide'}`}>
           <video
-            // src={videoData?.videoURL}
-            src={"http://techslides.com/demos/sample-videos/small.mp4"}
+            src={videoData?.videoURL}
+            // src={"http://techslides.com/demos/sample-videos/small.mp4"}
             controls
             id='streamingVideo'
             name='streamingVideo'
@@ -110,10 +117,6 @@ export default function Home({ navData, footerData, videoData, profileData, toke
           </div>
           <div className="comment-bottom">
             <div id='usersComments' className="users-comments">
-              <Comments />
-              <Comments />
-              <Comments />
-              <Comments />
               <Comments />
             </div>
             <div className="comment-section">
