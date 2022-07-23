@@ -9,7 +9,8 @@ import Comments from '../components/comments'
 import InputEmoji from 'react-input-emoji'
 import { useRouter } from 'next/router';
 import io from 'socket.io-client';
-const ChatEndPoint = "http://b3aa-103-111-224-48.ngrok.io/";
+// const ChatEndPoint = "http://b3aa-103-111-224-48.ngrok.io/";
+const ChatEndPoint = "http://192.168.1.33:5000/";
 
 
 export default function Home({ navData, footerData, videoData, profileData, token, eventData }) {
@@ -199,7 +200,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
               <div className="col-11">
                 <InputEmoji
                   value={text}
-                  onChange={setText}
+                  onChange={setText} 
                   cleanOnEnter
                   placeholder="Type a message"
                   onKeyDown={(e) => sendText(text, e, 'text')}
