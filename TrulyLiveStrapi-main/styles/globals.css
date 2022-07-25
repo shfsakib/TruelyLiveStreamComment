@@ -346,10 +346,7 @@ details[open] .faq-ans {
   background: #555;
 }
 /* emoji box */
-.react-input-emoji--input {
-  max-height: 40px !important;
-  overflow-y: hidden !important;
-}
+
 .react-emoji-picker--wrapper {
   z-index: 1000 !important;
   overflow: visible !important;

@@ -9,9 +9,10 @@ import Comments from '../components/comments'
 import InputEmoji from 'react-input-emoji'
 import { useRouter } from 'next/router';
 import io from 'socket.io-client';
-// const ChatEndPoint = "http://b3aa-103-111-224-48.ngrok.io/";
-const ChatEndPoint = "http://192.168.1.33:5000/";
-
+//Chat server URL
+//const ChatEndPoint = "https://truly-live-chat-backend.vercel.app/";
+const ChatEndPoint = "https://trulylivechatbackend.herokuapp.com/"
+//
 
 export default function Home({ navData, footerData, videoData, profileData, token, eventData }) {
 
@@ -23,8 +24,11 @@ export default function Home({ navData, footerData, videoData, profileData, toke
   const [hideDrop, setHideDrop] = useState(null);
   const [currentUser, setCurrentUser] = useState({
     Image: profileData && profileData.image.url,
-    Email: profileData && profileData.email
+    Email: profileData.email
   });
+  //Unique Room By URL path name
+  const UniqueRoomId = router.pathname;
+  //
   //socket initial
   const socket = io(ChatEndPoint, { transports: ["websocket", "polling", "flashsocket"], forceNew: true });
   var selectedUserId = "";
@@ -36,7 +40,14 @@ export default function Home({ navData, footerData, videoData, profileData, toke
     window.addEventListener("resize", changeWindowWidth);
   }, []);
 
-
+  useEffect(() => {
+    triggerSideBar();
+  }, [windowWidth]);
+  // useEffect(() => {
+  //   console.log(router);
+  //   console.log(videoData);
+  //   console.log(eventData);
+  // }, []);
   const changeWindowWidth = () => {
     setWindowWidth([window.innerWidth]);
   }
@@ -48,12 +59,8 @@ export default function Home({ navData, footerData, videoData, profileData, toke
       setSideMenu(true);
     }
   }
-
-  useEffect(() => {
-    triggerSideBar();
-  }, [windowWidth]);
   const LoadData = () => {
-    socket.emit("loadAllComment", { OwnUnique: currentUser.Email, RoomId: router.pathname })
+    socket.emit("loadAllComment", { OwnUnique: currentUser.Email, RoomId: UniqueRoomId })
   }
 
   useEffect(() => {
@@ -73,33 +80,24 @@ export default function Home({ navData, footerData, videoData, profileData, toke
     });
     return function cleanup() {
       socket.off('rcvOwnMsg');
-      socket.off('loadData' + currentUser._id);
+      socket.off('loadData' + currentUser.Email);
     }
   }, [])
   const scrollChatMiddle = () => {
     document.getElementById('usersComments').scrollTop = document.getElementById('usersComments').scrollHeight;
   }
-  const sendText = (data, e, type) => {
+  const sendText = (data, e) => {
     // document.getElementById('messageBox').value = '';
-    if (type === 'text') {
-      if (text.trim() !== '') {
-        if (e.keyCode === 13 && !e.shiftKey) {
-          if (data && data.trim() !== '') {
-            socket.emit("sendMessage", { Email: currentUser.Email, OwnPic: currentUser.Image, Message: data, RoomId: router.pathname })
-          }
-          e.preventDefault();
+    if (text.trim() !== '') {
+      if (e.keyCode === 13 && !e.shiftKey) {
+        if (data && data.trim() !== '') {
+          socket.emit("sendMessage", { Email: currentUser.Email, OwnPic: currentUser.Image, Message: data, RoomId: UniqueRoomId })
         }
-      } else {
-        if (e.keyCode === 13)
-          e.preventDefault();
+        e.preventDefault();
       }
-    }
-    else {
-      if (data && data.trim() !== '') {
-        socket.emit("sendMessage", { Email: currentUser.Email, OwnPic: currentUser.Image, Message: data, RoomId: router.pathname })
-      }
-      setText('')
-      e.preventDefault();
+    } else {
+      if (e.keyCode === 13)
+        e.preventDefault();
     }
 
     scrollChatMiddle();
@@ -173,7 +171,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
             autoPlay
             poster={videoData?.videoThumbnail?.data?.attributes?.url}
           />
-          <button className={`comment-button btn btn-primary ${!sideMenu && 'd-none'}`} onClick={handleCommentMenu}><img src='/images/comment.png' alt='comments' /></button>
+          <button className={`comment-button btn btn-primary ${!sideMenu && 'd-none'}`} onClick={handleCommentMenu}><i className="fas fa-comment fa-lg"></i></button>
         </div>
         <div className={`comments-div ${sideMenu && 'close'}`}>
           <div className="comment-top">
@@ -182,7 +180,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
                 <span className='title'>Comments</span>
               </div>
               <div className="col-4 text-right">
-                <a className='btn text-white pt-0' onClick={handleCommentMenu}><img src='/images/close.png' alt='comments' style={{ width: '15px' }} /></a>
+                <a className='btn text-white pt-0' onClick={handleCommentMenu}><i className="fas fa-times fa-lg"></i></a>
               </div>
             </div>
             <hr />
@@ -200,21 +198,20 @@ export default function Home({ navData, footerData, videoData, profileData, toke
               <div className="col-11">
                 <InputEmoji
                   value={text}
-                  onChange={setText} 
+                  onChange={setText}
                   cleanOnEnter
                   placeholder="Type a message"
-                  onKeyDown={(e) => sendText(text, e, 'text')}
+                  onKeyDown={(e) => sendText(text, e)}
                 />
               </div>
               <div className="col-1 text-left">
-                <button className='btn p-0 text-primary mt-2' onClick={(e) => sendText(text, e, 'button')}><img src='/images/send.png' style={{ width: '35px', position: 'relative', top: '5px' }} alt='comments' /></button>
+                <button className='btn ps-0 text-primary mt-2' onClick={() => sendText(text)}><i className="fas fa-paper-plane fa-lg"></i></button>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <Footer footerData={footerData} />
-
+      <Footer footerData={footerData} /> 
     </>
   )
 }
