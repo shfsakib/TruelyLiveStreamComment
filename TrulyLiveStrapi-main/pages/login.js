@@ -11,11 +11,13 @@ import Head from 'next/head'
 import { AuthContext } from '../context/AuthState'
 import { toast } from 'react-toastify'
 
-const LoginPage = ({ navData, footerData }) => {
+const LoginPage = ({ navData, footerData, userData }) => {
+  const usersEmails = userData?.map((user) => user.email)
+
   const [password, setPassword] = useState('')
   const [email, setEmail] = useState('')
 
-  const { login, error } = useContext(AuthContext)
+  const { loading, login, error } = useContext(AuthContext)
 
   useEffect(() => {
     error && toast.error(error)
@@ -23,7 +25,7 @@ const LoginPage = ({ navData, footerData }) => {
 
   const handleLogin = (e) => {
     e.preventDefault()
-    login({ identifier: email, password })
+    login({ identifier: email, password }, usersEmails)
   }
 
   return (
@@ -61,15 +63,14 @@ const LoginPage = ({ navData, footerData }) => {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <button className="bg-pmRed2 text-pureWhite uppercase py-3.5 w-full cursor-pointer text-sm rounded-sm">
-                LOGIN
-              </button>
-              {/* <button
+              <button
                 disabled={loading}
-                className={`${loading && 'opacity-60'} bg-primary py-2 px-5 w-full rounded-md text-white`}
+                className={`${
+                  loading && 'opacity-60'
+                } bg-pmRed2 text-pureWhite uppercase py-3.5 w-full cursor-pointer text-sm rounded-sm`}
               >
                 {loading ? 'Loading...' : 'LOGIN'}
-              </button> */}
+              </button>
               <div className="md:flex justify-around gap-5">
                 <div className="my-5 flex w-full border">
                   <a
@@ -106,6 +107,9 @@ const LoginPage = ({ navData, footerData }) => {
 }
 
 export const getStaticProps = async () => {
+  const usersRes = await fetch(`${baseUrl}/users`)
+  const userData = await usersRes.json()
+
   const navRes = await fetch(`${baseUrl}/nav-bars?populate=%2A`)
   const navData = await navRes.json()
 
@@ -115,7 +119,8 @@ export const getStaticProps = async () => {
   return {
     props: {
       navData: navData.data[0].attributes,
-      footerData: footerData.data[0].attributes
+      footerData: footerData.data[0].attributes,
+      userData
     },
     revalidate: 1
   }

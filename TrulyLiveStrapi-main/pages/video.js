@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Fragment, useMemo } from 'react'
 import Head from 'next/head'
 import Footer from '../components/Footer'
 import Navbar from '../components/Navbar'
@@ -6,13 +6,21 @@ import { baseUrl } from '../backend'
 import cookie from 'cookie'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Comments from '../components/comments'
-import InputEmoji from 'react-input-emoji'
 import { useRouter } from 'next/router';
+import { AiOutlineClose, AiOutlineSend } from 'react-icons/ai'
+import { BsChat } from 'react-icons/bs'
+import { MdOutlineEmojiEmotions } from 'react-icons/md'
 import io from 'socket.io-client';
+let Picker;
+if (typeof window !== 'undefined') {
+  import('emoji-picker-react').then(_module => {
+    Picker = _module.default;
+  });
+}
 //Chat server URL
 //const ChatEndPoint = "https://truly-live-chat-backend.vercel.app/";
 const ChatEndPoint = "https://trulylivechatbackend.herokuapp.com/"
-//
+// 
 
 export default function Home({ navData, footerData, videoData, profileData, token, eventData }) {
 
@@ -20,12 +28,14 @@ export default function Home({ navData, footerData, videoData, profileData, toke
   const [text, setText] = useState('')
   const [windowSize, setWindowSize] = useState(null);
   const [sideMenu, setSideMenu] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
   const [windowWidth, setWindowWidth] = useState(0);
   const [hideDrop, setHideDrop] = useState(null);
   const [currentUser, setCurrentUser] = useState({
     Image: profileData && profileData.image.url,
     Email: profileData.email
   });
+
   //Unique Room By URL path name
   const UniqueRoomId = router.pathname;
   //
@@ -43,11 +53,6 @@ export default function Home({ navData, footerData, videoData, profileData, toke
   useEffect(() => {
     triggerSideBar();
   }, [windowWidth]);
-  // useEffect(() => {
-  //   console.log(router);
-  //   console.log(videoData);
-  //   console.log(eventData);
-  // }, []);
   const changeWindowWidth = () => {
     setWindowWidth([window.innerWidth]);
   }
@@ -65,7 +70,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
 
   useEffect(() => {
     socket.on("loadData" + currentUser.Email, (data) => {
-      console.log(data);
+
       var chatData = [];
       data.forEach(element => {
         chatData.push(element);
@@ -93,6 +98,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
         if (data && data.trim() !== '') {
           socket.emit("sendMessage", { Email: currentUser.Email, OwnPic: currentUser.Image, Message: data, RoomId: UniqueRoomId })
         }
+        setText('')
         e.preventDefault();
       }
     } else {
@@ -131,7 +137,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
         // alert(error.response.data.message[0].messages[0].message)
       }
     }
-    addToDB()
+    addToDB();
   }, [profileData?.username, profileData?.email, token])
 
   useEffect(() => {
@@ -152,8 +158,115 @@ export default function Home({ navData, footerData, videoData, profileData, toke
     hideDrop === null ? setHideDrop(false) : setHideDrop(!hideDrop);
     LoadData();
   }
+  const css = `
+  .input-box{
+    resize: none;
+    border-radius: 5px;
+    max-height: 50px;
+    margin:0 5px;
+    font-size:14px;
+  }
+  .react-button{
+    color:white;
+    margin:10px 0 5px 0;
+    cursor:pointer;
+  }
+  .emoji-picker-react .emoji-categories{
+    filter: invert(42%) sepia(93%) saturate(1352%) hue-rotate(87deg) brightness(119%) contrast(119%);
+  }
+  .emoji-picker-react .emoji-categories button{
+    background-size:25px!important;
+    }
+    .emoji-picker-react .emoji-scroll-wrapper{
+    background-color:rgba(0,0,0,1)
+
+    }
+  .emoji-picker-react .emoji-group:before{
+    background-color:rgba(0,0,0,0.7)
+  }
+  .emoji-picker-react input.emoji-search{
+    background:transparent
+  }
+  .emoji-scroll-wrapper::-webkit-scrollbar {
+    width: 5px;
+    background-color: gainsboro;
+  }
+  .emoji-scroll-wrapper::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  `
+  const emojiContainer = {
+    position: 'absolute',
+    marginTop: '-360px',
+    marginLeft: '-20px',
+    width: 'calc(100% - 10px)',
+  }
+
+  const handleEmojiSelect = (e, emojiData) => {
+
+    let body = document.querySelector('.video-left-div');
+    let myemoji = document.createElement('span');
+    let x = e.screenX;
+    let y = e.screenY;
+    myemoji.style.top = 250 + Math.floor(Math.random() * 100) + 20 + 'px';
+    myemoji.style.right = '360px';
+    myemoji.classList.add('emoji-div');
+    myemoji.innerHTML = `<img src='${getImageEmoji(emojiData)}' data-emoji='${emojiData.emoji}' />`;
+    console.log();
+    let sizeEmoji = Math.random() + 1 * 50;
+    myemoji.style.fontSize = sizeEmoji + 10 + 'px';
+    body.appendChild(myemoji);
+
+    setTimeout(() => {
+      myemoji.remove();
+    }, 4000);
+    // setShowEmoji(!showEmoji)
+    // document.addEventListener('mousemove', (e) => {
+    //   let body = document.querySelector('body');
+    //   let myemoji = document.createElement('span');
+    //   let x = e.offsetX;
+    //   let y = e.offsetY;
+    //   myemoji.style.top = 500 + 'px';
+    //   myemoji.style.right = '400px';
+    //   myemoji.classList.add('emoji-div');
+    //   myemoji.innerText = emojiData.emoji;
+
+    //   let sizeEmoji = Math.random() * 50;
+    //   myemoji.style.fontSize = sizeEmoji + 10 + 'px';
+    //   body.appendChild(myemoji);
+
+    //   setTimeout(() => {
+    //     myemoji.remove();
+    //   }, 3000);
+    // })
+    // document.querySelector('.emoji-img').addEventListener('mousedown', (e) => {
+    //   let body = document.querySelector('body');
+    //   let myemoji = document.createElement('span');
+    //   let x = e.offsetX;
+    //   let y = e.offsetY;
+    //   myemoji.style.top = 500 + 'px';
+    //   myemoji.style.right = '400px';
+    //   myemoji.classList.add('emoji-div');
+    //   myemoji.innerText = emojiData.emoji;
+
+    //   let sizeEmoji = Math.random() * 50;
+    //   myemoji.style.fontSize = sizeEmoji + 10 + 'px';
+    //   body.appendChild(myemoji);
+
+    //   setTimeout(() => {
+    //     myemoji.remove();
+    //   }, 4000);
+    // })
+    // return function cleanup() {
+    //   document.addEventListener('mousemove', (e) => { })
+    //   document.addEventListener('mousedown', (e) => { })
+    // }
+  }
+
   return (
-    <>
+    <Fragment>
+      <style>{css}</style>
       <Head>
         <title>Truly Live | Video</title>
         <meta name="description" content="Truly Live - 100% Live by definition" />
@@ -171,7 +284,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
             autoPlay
             poster={videoData?.videoThumbnail?.data?.attributes?.url}
           />
-          <button className={`comment-button btn btn-primary ${!sideMenu && 'd-none'}`} onClick={handleCommentMenu}><i className="fas fa-comment fa-lg"></i></button>
+          <button className={`comment-button btn btn-primary ${!sideMenu && 'd-none'}`} onClick={handleCommentMenu}><BsChat size={24} /></button>
         </div>
         <div className={`comments-div ${sideMenu && 'close'}`}>
           <div className="comment-top">
@@ -180,7 +293,9 @@ export default function Home({ navData, footerData, videoData, profileData, toke
                 <span className='title'>Comments</span>
               </div>
               <div className="col-4 text-right">
-                <a className='btn text-white pt-0' onClick={handleCommentMenu}><i className="fas fa-times fa-lg"></i></a>
+                <a className='btn text-white pb-0' onClick={handleCommentMenu}>
+                  <AiOutlineClose size={20} />
+                </a>
               </div>
             </div>
             <hr />
@@ -195,24 +310,38 @@ export default function Home({ navData, footerData, videoData, profileData, toke
               }
             </div>
             <div className="comment-section">
+              {showEmoji && (
+                <div style={emojiContainer}>
+                  <Fragment>
+                    <Picker
+                      pickerStyle={{ width: '100%', height: '350px', backgroundColor: 'rgba(0,0,0,1)' }}
+                      searchPlaceholder='Search Emoji'
+                      disableSkinTonePicker={true}
+                      onEmojiClick={(e, emoji) => handleEmojiSelect(e, emoji)} />
+                  </Fragment>
+                </div>
+              )}
               <div className="col-11">
-                <InputEmoji
-                  value={text}
-                  onChange={setText}
-                  cleanOnEnter
-                  placeholder="Type a message"
-                  onKeyDown={(e) => sendText(text, e)}
-                />
+                <div className='d-flex'>
+                  <MdOutlineEmojiEmotions size={32} className='react-button' onClick={() => setShowEmoji(!showEmoji)} />
+                  <textarea
+                    value={text}
+                    className={'form-control input-box'}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Type a message"
+                    onKeyDown={(e) => sendText(text, e)}
+                  />
+                </div>
               </div>
               <div className="col-1 text-left">
-                <button className='btn ps-0 text-primary mt-2' onClick={() => sendText(text)}><i className="fas fa-paper-plane fa-lg"></i></button>
+                <button className='btn ps-0 text-primary mt-2' onClick={() => sendText(text)}><AiOutlineSend size={30} style={{ position: 'relative', top: '-4px', color: 'white' }} /></button>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <Footer footerData={footerData} /> 
-    </>
+      <Footer footerData={footerData} />
+    </Fragment>
   )
 }
 
@@ -253,4 +382,11 @@ export const getServerSideProps = async ({ req }) => {
       profileData: data
     }
   }
+}
+function getImageEmoji(emoji) {
+  var imgSrc = 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/' + emoji.unified + '.png';
+  return imgSrc;
+}
+function replaceAll(str, find, replace) {
+  return str.replace(new RegExp(find, "g"), replace);
 }

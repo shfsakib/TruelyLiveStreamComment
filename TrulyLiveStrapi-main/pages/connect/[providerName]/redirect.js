@@ -4,8 +4,12 @@ import { baseUrl } from '../../../backend'
 import cookie from 'js-cookie'
 import Head from 'next/head'
 import { toast } from 'react-toastify'
+import { useContext } from 'react'
+import { AuthContext } from '../../../context/AuthState'
 
 const LoginRedirect = () => {
+  const { dispatch } = useContext(AuthContext)
+
   const router = useRouter()
   const tokens =
     router.query?.providerName === 'google'
@@ -23,6 +27,7 @@ const LoginRedirect = () => {
             cookie.set('token', data.jwt, {
               expires: 5
             })
+            dispatch({ type: 'PROVIDER', payload: data.user })
             setTimeout(() => (localRoute ? router.push(`/events/${localRoute}`) : router.push('/onboarding')), 1000)
             toast('Logged in successfully')
           } else {

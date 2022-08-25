@@ -16,7 +16,7 @@ const RegisterPage = ({ navData, footerData }) => {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
 
-  const { register, error } = useContext(AuthContext)
+  const { loading, register, error } = useContext(AuthContext)
 
   useEffect(() => {
     error && toast.error(error)
@@ -72,15 +72,14 @@ const RegisterPage = ({ navData, footerData }) => {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <button className="bg-pmRed2 text-pureWhite uppercase py-3.5 w-full cursor-pointer text-sm rounded-sm">
-                SIGNUP
-              </button>
-              {/* <button
+              <button
                 disabled={loading}
-                className={`${loading && 'opacity-60'} bg-primary py-2 px-5 w-full rounded-md text-white`}
+                className={`${
+                  loading && 'opacity-60'
+                } bg-pmRed2 text-pureWhite uppercase py-3.5 w-full cursor-pointer text-sm rounded-sm`}
               >
-                {loading ? 'Loading...' : 'LOGIN'}
-              </button> */}
+                {loading ? 'Loading...' : 'SIGNUP'}
+              </button>
               <div className="md:flex justify-around gap-5">
                 <div className="my-5 flex w-full border">
                   <a

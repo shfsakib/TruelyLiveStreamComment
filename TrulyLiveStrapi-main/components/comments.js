@@ -8,7 +8,8 @@ const Comments = ({ chat, scrollChatMiddle }) => {
         <Fragment>
             <div className="comment-row">
                 <div className="comment-left">
-                    <img src="/images/audience.png" alt="audience" />
+                    <img src={chat && chat.SenderPic ? chat.SenderPic : "/images/audience.png"} alt="audience" />
+
                 </div>
                 <div className="comment-right">
                     <p className="comments">{chat && chat.Message}</p>
