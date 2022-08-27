@@ -257,7 +257,7 @@ details[open] .faq-ans {
   /* transition: 0.5s all ease; */
 }
 .comments-div .comment-top {
-  height: 70px;
+  height: 45px;
 }
 .comments-div .comment-top .title {
   color: gainsboro;
@@ -269,6 +269,7 @@ details[open] .faq-ans {
 }
 .comments-div .comment-bottom .users-comments {
   height: calc(500px);
+  padding-top: 10px;
   overflow-y: auto;
 }
 .comments-div .comment-bottom .comment-section {
@@ -304,6 +305,7 @@ details[open] .faq-ans {
 .comment-row .comment-right p {
   margin: 0;
   text-align: left;
+  word-break: break-all;
 }
 .comment-row .comment-right .comment-time {
   width: 100%;
@@ -367,13 +369,13 @@ details[open] .faq-ans {
   .video-left-div video {
     min-height: 350px !important;
   }
-  .comments-div {
-    height: 450px;
+  .comments-div { 
+    height: 450px !important;
     width: 100% !important;
   }
-  .comments-div .users-comments {
-    height: 300px !important;
-  }
+  /* .comments-div .users-comments {
+    height: 240px !important;
+  } */
 }
 @media (max-width: 768px) {
   .factbox {
@@ -409,4 +411,23 @@ span.emoji-div {
     right: 100%;
     opacity: 0;
   }
+}
+.pin-message-row {
+  position: relative;
+  width: calc(100% - 0px);
+  height: 80px;
+  overflow: auto;
+  padding: 5px 5px;
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+.pin-message-row::-webkit-scrollbar {
+  width: 5px;
+  background-color: #686b6d;
+}
+.pin-message-row::-webkit-scrollbar-thumb {
+  background-color: black;
+}
+.Toastify__toast-container {
+  z-index: 99999 !important;
 }

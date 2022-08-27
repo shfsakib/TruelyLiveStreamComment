@@ -7,10 +7,11 @@ import cookie from 'cookie'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Comments from '../components/comments'
 import { useRouter } from 'next/router';
-import { AiOutlineClose, AiOutlineSend } from 'react-icons/ai'
+import { AiFillPushpin, AiOutlineClose, AiOutlinePushpin, AiOutlineSend } from 'react-icons/ai'
 import { BsChat } from 'react-icons/bs'
 import { MdOutlineEmojiEmotions } from 'react-icons/md'
 import io from 'socket.io-client';
+import { toast } from 'react-toastify'
 let Picker;
 if (typeof window !== 'undefined') {
   import('emoji-picker-react').then(_module => {
@@ -19,11 +20,11 @@ if (typeof window !== 'undefined') {
 }
 //Chat server URL
 //const ChatEndPoint = "https://truly-live-chat-backend.vercel.app/";
-const ChatEndPoint = "https://trulylivechatbackend.herokuapp.com/"
+// const ChatEndPoint = "https://trulylivechatbackend.herokuapp.com/"
+const ChatEndPoint = "http://192.168.1.33:5000/"
 // 
 
 export default function Home({ navData, footerData, videoData, profileData, token, eventData }) {
-
   let router = useRouter();
   const [text, setText] = useState('')
   const [windowSize, setWindowSize] = useState(null);
@@ -31,9 +32,14 @@ export default function Home({ navData, footerData, videoData, profileData, toke
   const [showEmoji, setShowEmoji] = useState(false);
   const [windowWidth, setWindowWidth] = useState(0);
   const [hideDrop, setHideDrop] = useState(null);
+  const [pinMessage, setPinMessage] = useState('');
+  const [blocked, setBlocked] = useState(false);
+  const [emojiStatus, setEmojiStatus] = useState('unblock');
   const [currentUser, setCurrentUser] = useState({
+    Name: profileData && profileData.username,
     Image: profileData && profileData.image.url,
-    Email: profileData.email
+    Email: profileData.email,
+    isAdmin: profileData && profileData.isAdmin
   });
 
   //Unique Room By URL path name
@@ -66,11 +72,12 @@ export default function Home({ navData, footerData, videoData, profileData, toke
   }
   const LoadData = () => {
     socket.emit("loadAllComment", { OwnUnique: currentUser.Email, RoomId: UniqueRoomId })
+    socket.emit("loadPinMessage", { OwnUnique: currentUser.Email, RoomId: UniqueRoomId })
+    socket.emit("loadEmojiBlock", { OwnUnique: currentUser.Email, RoomId: UniqueRoomId })
   }
 
   useEffect(() => {
     socket.on("loadData" + currentUser.Email, (data) => {
-
       var chatData = [];
       data.forEach(element => {
         chatData.push(element);
@@ -78,14 +85,77 @@ export default function Home({ navData, footerData, videoData, profileData, toke
       setChat(chatData);
       scrollChatMiddle();
     });
+    socket.on("pinLoad" + currentUser.Email, (data) => {
+      setPinMessage(data.PinMessage);
+    });
+    //block code
+    socket.on("blockResult" + currentUser.Email, (data) => {
+      if (data === 'Yes') {
+        setBlocked(true);
+      } else {
+        setBlocked(false);
+      }
+    });
+    socket.on("blockSuccess" + currentUser.Email, (data) => {
+      toast.success('User has been blocked successfully');
+      LoadData();
+    });
+    socket.on("blockedByAdmin" + currentUser.Email, (data) => {
+      if (data === 'Yes') {
+        setBlocked(true);
+        LoadData();
+      } else {
+        setBlocked(false);
+      }
+    });
+    //block code end
+    // pin message code
+    socket.on("pinSuccess" + currentUser.Email, (data) => {
+      toast.success('Message has been pinned successfully');
+      // LoadData();
+    });
+    socket.on("loadEmojiStatus" + currentUser.Email, (data) => {
+      if (data.RoomId === UniqueRoomId) {
+        setEmojiStatus(data.Status)
+      }
+    });
+    socket.on("EmojiStatus", (data) => {
+      if (data.RoomId === UniqueRoomId) {
+        setEmojiStatus(data.Status)
+      }
+    });
+    socket.on("newPinShow", (data) => {
+      if (data.RoomId === UniqueRoomId) {
+        setPinMessage(data.PinMessage)
+      }
+    });
+    //pin message code end
+    socket.on("rcvEmoji", (data) => {
+      floatEmoji(data.Message)
+    });
+    //
+    socket.on("deletePin", (data) => {
+      if (data.RoomId === UniqueRoomId) {
+        setPinMessage('')
+      }
+    });
+    //
     socket.on("rcvOwnMsg", (data) => {
-      console.log(data);
       setChat((chat) => [...chat, data]);
       scrollChatMiddle();
     });
     return function cleanup() {
       socket.off('rcvOwnMsg');
       socket.off('loadData' + currentUser.Email);
+      socket.off('pinLoad' + currentUser.Email);
+      socket.off('blockResult' + currentUser.Email);
+      socket.off('blockSuccess' + currentUser.Email);
+      socket.off('blockedByAdmin' + currentUser.Email);
+      socket.off('pinSuccess' + currentUser.Email);
+      socket.off('newPinShow' + currentUser.Email);
+      socket.off('EmojiStatus');
+      socket.off('loadEmojiStatus' + currentUser.Email);
+      socket.off('rcvEmoji');
     }
   }, [])
   const scrollChatMiddle = () => {
@@ -96,7 +166,13 @@ export default function Home({ navData, footerData, videoData, profileData, toke
     if (text.trim() !== '') {
       if (e.keyCode === 13 && !e.shiftKey) {
         if (data && data.trim() !== '') {
-          socket.emit("sendMessage", { Email: currentUser.Email, OwnPic: currentUser.Image, Message: data, RoomId: UniqueRoomId })
+          socket.emit("sendMessage", {
+            Name: currentUser.Name,
+            Email: currentUser.Email,
+            OwnPic: currentUser.Image,
+            Message: data,
+            RoomId: UniqueRoomId
+          })
         }
         setText('')
         e.preventDefault();
@@ -107,6 +183,20 @@ export default function Home({ navData, footerData, videoData, profileData, toke
     }
 
     scrollChatMiddle();
+  }
+  const handleBlock = (data) => {
+    socket.emit("blockAnyUser", {
+      OwnUnique: currentUser.Email,
+      UserEmail: data.SenderID,
+      RoomId: UniqueRoomId
+    })
+  }
+  const handlePinMessage = (data) => {
+    socket.emit("setPinMessage", {
+      OwnUnique: currentUser.Email,
+      PinMessage: data.Message,
+      RoomId: UniqueRoomId
+    })
   }
   // const hitEnter = (e) => {
   //   if (text.trim() !== '') {
@@ -148,13 +238,42 @@ export default function Home({ navData, footerData, videoData, profileData, toke
 
   }, [windowSize])
   const handleComment = (text) => {
-    console.log('enter', text);
     scrollChatMiddle();
   }
+  const handlePinMessageSet = () => {
+    windowWidth > 768 ?
+      (pinMessage !== '' ?
+
+        document.getElementById('usersComments').style.height = document.getElementById('streamingVideo').scrollHeight - 210 + 'px'
+        :
+        document.getElementById('usersComments').style.height = document.getElementById('streamingVideo').scrollHeight - 150 + 'px')
+      :
+      (
+        pinMessage !== '' ?
+          document.getElementById('usersComments').style.height = document.getElementById('streamingVideo').scrollHeight - 110 + 'px'
+          :
+          document.getElementById('usersComments').style.height = '320px'
+      )
+  }
+  const handleRemovePin = () => {
+    socket.emit("deletePinMessage", {
+      OwnUnique: currentUser.Email,
+      RoomId: UniqueRoomId
+    })
+  }
+  useEffect(() => {
+    handlePinMessageSet();
+  }, [pinMessage])
+
+  useEffect(() => {
+    handlePinMessageSet();
+  }, [windowWidth]);
+
   const handleCommentMenu = () => {
-    document.getElementById('usersComments').style.height = document.getElementById('streamingVideo').scrollHeight - 150 + 'px';
+    handlePinMessageSet();
     scrollChatMiddle();
     setSideMenu(!sideMenu);
+    setShowEmoji(false);
     hideDrop === null ? setHideDrop(false) : setHideDrop(!hideDrop);
     LoadData();
   }
@@ -194,7 +313,9 @@ export default function Home({ navData, footerData, videoData, profileData, toke
   .emoji-scroll-wrapper::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.8);
   }
-  
+  .show-emoji{
+    color:#128b7e!Important;
+  }
   `
   const emojiContainer = {
     position: 'absolute',
@@ -202,18 +323,19 @@ export default function Home({ navData, footerData, videoData, profileData, toke
     marginLeft: '-20px',
     width: 'calc(100% - 10px)',
   }
-
-  const handleEmojiSelect = (e, emojiData) => {
-
+  const floatEmoji = (emoji) => {
     let body = document.querySelector('.video-left-div');
     let myemoji = document.createElement('span');
-    let x = e.screenX;
-    let y = e.screenY;
-    myemoji.style.top = 250 + Math.floor(Math.random() * 100) + 20 + 'px';
-    myemoji.style.right = '360px';
+    if (windowWidth > 768) {
+      myemoji.style.top = 250 + Math.floor(Math.random() * 100) + 20 + 'px';
+      myemoji.style.right = '360px';
+    } else {
+      myemoji.style.top = 150 + Math.floor(Math.random() * 100) + 20 + 'px';
+      myemoji.style.right = '20px';
+    }
+
     myemoji.classList.add('emoji-div');
-    myemoji.innerHTML = `<img src='${getImageEmoji(emojiData)}' data-emoji='${emojiData.emoji}' />`;
-    console.log();
+    myemoji.innerHTML = emoji;
     let sizeEmoji = Math.random() + 1 * 50;
     myemoji.style.fontSize = sizeEmoji + 10 + 'px';
     body.appendChild(myemoji);
@@ -221,47 +343,40 @@ export default function Home({ navData, footerData, videoData, profileData, toke
     setTimeout(() => {
       myemoji.remove();
     }, 4000);
-    // setShowEmoji(!showEmoji)
-    // document.addEventListener('mousemove', (e) => {
-    //   let body = document.querySelector('body');
-    //   let myemoji = document.createElement('span');
-    //   let x = e.offsetX;
-    //   let y = e.offsetY;
-    //   myemoji.style.top = 500 + 'px';
-    //   myemoji.style.right = '400px';
-    //   myemoji.classList.add('emoji-div');
-    //   myemoji.innerText = emojiData.emoji;
+  }
+  const handleEmojiSelect = (e, emojiData) => {
 
-    //   let sizeEmoji = Math.random() * 50;
-    //   myemoji.style.fontSize = sizeEmoji + 10 + 'px';
-    //   body.appendChild(myemoji);
-
-    //   setTimeout(() => {
-    //     myemoji.remove();
-    //   }, 3000);
-    // })
-    // document.querySelector('.emoji-img').addEventListener('mousedown', (e) => {
-    //   let body = document.querySelector('body');
-    //   let myemoji = document.createElement('span');
-    //   let x = e.offsetX;
-    //   let y = e.offsetY;
-    //   myemoji.style.top = 500 + 'px';
-    //   myemoji.style.right = '400px';
-    //   myemoji.classList.add('emoji-div');
-    //   myemoji.innerText = emojiData.emoji;
-
-    //   let sizeEmoji = Math.random() * 50;
-    //   myemoji.style.fontSize = sizeEmoji + 10 + 'px';
-    //   body.appendChild(myemoji);
-
-    //   setTimeout(() => {
-    //     myemoji.remove();
-    //   }, 4000);
-    // })
-    // return function cleanup() {
-    //   document.addEventListener('mousemove', (e) => { })
-    //   document.addEventListener('mousedown', (e) => { })
+    // let body = document.querySelector('.video-left-div');
+    // let myemoji = document.createElement('span');
+    // let x = e.screenX;
+    // let y = e.screenY;
+    // if (windowWidth > 768) {
+    //   myemoji.style.top = 250 + Math.floor(Math.random() * 100) + 20 + 'px';
+    //   myemoji.style.right = '360px';
+    // } else {
+    //   myemoji.style.top = 150 + Math.floor(Math.random() * 100) + 20 + 'px';
+    //   myemoji.style.right = '20px';
     // }
+
+    // myemoji.classList.add('emoji-div');
+    // myemoji.innerHTML = `<img src='${getImageEmoji(emojiData)}' data-emoji='${emojiData.emoji}' />`;
+    // console.log();
+    // let sizeEmoji = Math.random() + 1 * 50;
+    // myemoji.style.fontSize = sizeEmoji + 10 + 'px';
+    // body.appendChild(myemoji);
+
+    // setTimeout(() => {
+    //   myemoji.remove();
+    // }, 4000);
+
+    socket.emit("sendEmoji", {
+      Name: currentUser.Name,
+      Email: currentUser.Email,
+      OwnPic: currentUser.Image,
+      Message: `<img src='${getImageEmoji(emojiData)}' data-emoji='${emojiData.emoji}' />`,
+      RoomId: UniqueRoomId
+    })
+
   }
 
   return (
@@ -292,7 +407,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
               <div className="col-8">
                 <span className='title'>Comments</span>
               </div>
-              <div className="col-4 text-right">
+              <div className="col-4 text-right pe-0">
                 <a className='btn text-white pb-0' onClick={handleCommentMenu}>
                   <AiOutlineClose size={20} />
                 </a>
@@ -301,41 +416,99 @@ export default function Home({ navData, footerData, videoData, profileData, toke
             <hr />
           </div>
           <div className="comment-bottom">
-            <div id='usersComments' className="users-comments">
+            {
+              pinMessage !== '' &&
+              <div className='pin-message-row'>
+                <div className="comment-row">
+                  <div className="comment-right">
+                    <div className='col-12'>
+                      {
+                        currentUser.isAdmin === true &&
+                        <AiFillPushpin size={20} className={'cursor-pointer'} title={'Unpin Message'} onClick={handleRemovePin} />
+                      }
+                    </div>
+                    <p className="comments">{pinMessage && pinMessage}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <div id='usersComments' className={`users-comments ${pinMessage && 'pinned'}`}>
 
               {
                 chat && chat.length > 0 && chat.map((item, key) => (
-                  <Comments chat={item} key={key} scrollChatMiddle={scrollChatMiddle} />
+                  <Comments chat={item} key={key} scrollChatMiddle={scrollChatMiddle} handleBlock={handleBlock} handlePinMessage={handlePinMessage} currentUser={currentUser} />
                 ))
               }
             </div>
             <div className="comment-section">
-              {showEmoji && (
-                <div style={emojiContainer}>
+              {
+                blocked === true ?
+                  <div className='col-12 text-center'>
+                    <h5 className='text-warning'>Sorry! You've been blocked.</h5>
+                  </div>
+                  :
                   <Fragment>
-                    <Picker
-                      pickerStyle={{ width: '100%', height: '350px', backgroundColor: 'rgba(0,0,0,1)' }}
-                      searchPlaceholder='Search Emoji'
-                      disableSkinTonePicker={true}
-                      onEmojiClick={(e, emoji) => handleEmojiSelect(e, emoji)} />
+                    {
+                      showEmoji && (
+                        <div style={emojiContainer}>
+                          <Fragment>
+                            <Picker
+                              pickerStyle={{ width: '100%', height: '350px', backgroundColor: 'rgba(0,0,0,1)' }}
+                              searchPlaceholder='Search Emoji'
+                              disableSkinTonePicker={true}
+                              onEmojiClick={(e, emoji) => handleEmojiSelect(e, emoji)} />
+                          </Fragment>
+                        </div>
+                      )}
+                    <div className="col-11">
+                      <div className='d-flex'>
+                        {
+                          currentUser.isAdmin === true &&
+                          <Fragment>
+                            {
+                              emojiStatus === 'unblock' ?
+                                <img src='/images/emoji-block.png' className='cursor-pointer' title='Block Emoji' style={{ width: "30px", height: '30px', position: 'relative', top: '10px' }}
+                                  onClick={() => {
+                                    socket.emit("blockEmoji", {
+                                      Status: 'block',
+                                      RoomId: UniqueRoomId
+                                    })
+                                  }}
+                                />
+                                :
+                                <img src='/images/emoji-check.png' className='cursor-pointer' title='Block Emoji' style={{ width: "30px", height: '30px', position: 'relative', top: '10px' }}
+                                  onClick={() => {
+                                    socket.emit("blockEmoji", {
+                                      Status: 'unblock',
+                                      RoomId: UniqueRoomId
+                                    })
+                                  }}
+                                />
+                            }
+
+
+                          </Fragment>
+                        }
+                        {
+                          emojiStatus === 'unblock' &&
+                          <MdOutlineEmojiEmotions size={32} className={`react-button ${showEmoji ? 'show-emoji' : ''}`} onClick={() => setShowEmoji(!showEmoji)} />
+                        }
+                        <textarea
+                          value={text}
+                          className={'form-control input-box'}
+                          onChange={(e) => setText(e.target.value)}
+                          placeholder="Type a message"
+                          onKeyDown={(e) => sendText(text, e)}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-1 text-left">
+                      <button className='btn ps-0 text-primary mt-2' onClick={() => sendText(text)}><AiOutlineSend size={30} style={{ position: 'relative', top: '-4px', color: 'white' }} /></button>
+                    </div>
                   </Fragment>
-                </div>
-              )}
-              <div className="col-11">
-                <div className='d-flex'>
-                  <MdOutlineEmojiEmotions size={32} className='react-button' onClick={() => setShowEmoji(!showEmoji)} />
-                  <textarea
-                    value={text}
-                    className={'form-control input-box'}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="Type a message"
-                    onKeyDown={(e) => sendText(text, e)}
-                  />
-                </div>
-              </div>
-              <div className="col-1 text-left">
-                <button className='btn ps-0 text-primary mt-2' onClick={() => sendText(text)}><AiOutlineSend size={30} style={{ position: 'relative', top: '-4px', color: 'white' }} /></button>
-              </div>
+              }
             </div>
           </div>
         </div>
