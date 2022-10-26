@@ -40,8 +40,14 @@ const RegisterPage = ({ navData, footerData }) => {
             <Image src={loginImg} alt="login" height={500} width={500} className="hidden md:block" />
           </div>
           <div className="bg-white shadow-2xl rounded-lg p-5 mt-20">
-            <h1 className="text-2xl md:text-3xl text-center">LOGIN</h1>
+            <h1 className="text-2xl md:text-3xl text-center">REGISTER</h1>
             <form onSubmit={handleSignUp}>
+              <p className="my-5">
+                Have an account?{' '}
+                <Link href="/login" className="underline">
+                  Login
+                </Link>{' '}
+              </p>
               <div className="my-5">
                 <label htmlFor="email">Username</label>
                 <input
@@ -101,12 +107,6 @@ const RegisterPage = ({ navData, footerData }) => {
                 </div>
               </div>
             </form>
-            <p className="my-5">
-              Have an account?{' '}
-              <Link href="/login" className="underline">
-                Login
-              </Link>{' '}
-            </p>
           </div>
         </div>
       </div>

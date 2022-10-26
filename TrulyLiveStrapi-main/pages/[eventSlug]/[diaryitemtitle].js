@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useState, useRef } from 'react'
 import Head from 'next/head'
 import Footer from '../../components/Footer'
 import Navbar from '../../components/Navbar'
@@ -10,6 +10,8 @@ import InputEmoji from 'react-input-emoji'
 import { useRouter } from 'next/router'
 import io from 'socket.io-client'
 import { toast } from 'react-toastify'
+import VideoPlayer from '../../components/video-player'
+
 let Picker;
 if (typeof window !== 'undefined') {
   import('emoji-picker-react').then(_module => {
@@ -18,7 +20,7 @@ if (typeof window !== 'undefined') {
 }
 import { AiFillPushpin, AiOutlineClose, AiOutlinePushpin, AiOutlineSend } from 'react-icons/ai'
 import { BsChat } from 'react-icons/bs'
-import { MdOutlineEmojiEmotions } from 'react-icons/md' 
+import { MdOutlineEmojiEmotions } from 'react-icons/md'
 import { socket } from '../socket'
 
 export default function Video({ navData, footerData, profileData, token, videoData }) {
@@ -34,27 +36,40 @@ export default function Video({ navData, footerData, profileData, token, videoDa
   const [emojiStatus, setEmojiStatus] = useState('unblock');
   const [currentUser, setCurrentUser] = useState({
     Name: profileData && profileData.username,
-    Image: profileData && profileData.image.url,
+    Image: profileData && profileData.image && profileData.image?.url,
     Email: profileData.email,
     isAdmin: profileData && profileData.isAdmin
   });
   //Unique Room By URL path name
-  const UniqueRoomId = router.asPath
+  const UniqueRoomId = '/' + router.query.eventSlug;
   // 
   var selectedUserId = ''
   const [chat, setChat] = useState([])
 
+  const videoRef = useRef(null);
+  const streamRowRef = useRef(null);
+  const videoDivRef = useRef(null);
+
+  console.log(currentUser && currentUser);
   //
   useEffect(() => {
     setWindowWidth([window.innerWidth])
     window.addEventListener('resize', changeWindowWidth)
+    fixAspect()
   }, [])
+
+  function fixAspect() {
+    var correctHeight = Math.round(videoRef.current.offsetWidth / 1920 * 1080, 0)
+    console.log("fixAspect() -- Width=" + videoRef.current.offsetWidth + " Height=" + videoRef.current.offsetHeight + " correctHeight=" + correctHeight)
+    console.log("After set, height is " + videoRef.current.offsetHeight + " or " + videoRef.current.offsetHeight + " should be " + correctHeight + " style height is " + videoRef.current.style.height)
+  }
 
   useEffect(() => {
     triggerSideBar()
   }, [windowWidth])
   const changeWindowWidth = () => {
     setWindowWidth([window.innerWidth])
+    fixAspect()
   }
 
   const triggerSideBar = () => {
@@ -69,6 +84,21 @@ export default function Video({ navData, footerData, profileData, token, videoDa
     socket.emit("loadPinMessage", { OwnUnique: currentUser.Email, RoomId: UniqueRoomId })
     socket.emit("loadEmojiBlock", { OwnUnique: currentUser.Email, RoomId: UniqueRoomId })
   }
+  useEffect(() => {
+    socket.emit("enterIntoEvents", { Email: currentUser.Email, RoomId: UniqueRoomId, ProfilePic: currentUser.Image })
+  }, [])
+  useEffect(() => {
+    const exitingFunction = () => {
+      console.log(currentUser);
+      socket.emit("LeaveEvents", { Email: currentUser.Email, RoomId: UniqueRoomId, ProfilePic: currentUser.Image })
+    };
+    router.events.on('routeChangeStart', exitingFunction);
+
+    return () => {
+      router.events.off('routeChangeStart', exitingFunction);
+    };
+  }, [router.events])
+
 
   useEffect(() => {
     socket.on("loadData" + currentUser.Email, (data) => {
@@ -193,16 +223,17 @@ export default function Video({ navData, footerData, profileData, token, videoDa
     })
   }
   const handlePinMessageSet = () => {
+    var videoScrollHeight = document.getElementById('streamingVideo').scrollHeight
     windowWidth > 768 ?
       (pinMessage !== '' ?
 
-        document.getElementById('usersComments').style.height = document.getElementById('streamingVideo').scrollHeight - 210 + 'px'
+        document.getElementById('usersComments').style.height = videoScrollHeight - 210 + 'px'
         :
-        document.getElementById('usersComments').style.height = document.getElementById('streamingVideo').scrollHeight - 150 + 'px')
+        document.getElementById('usersComments').style.height = videoScrollHeight - 150 + 'px')
       :
       (
         pinMessage !== '' ?
-          document.getElementById('usersComments').style.height = document.getElementById('streamingVideo').scrollHeight - 110 + 'px'
+          document.getElementById('usersComments').style.height = videoScrollHeight - 110 + 'px'
           :
           document.getElementById('usersComments').style.height = '320px'
       )
@@ -223,6 +254,7 @@ export default function Video({ navData, footerData, profileData, token, videoDa
   useEffect(() => {
     window.addEventListener('resize', () => {
       setWindowSize(window.innerWidth)
+      fixAspect()
     })
     scrollChatMiddle()
   }, [windowSize])
@@ -332,20 +364,19 @@ export default function Video({ navData, footerData, profileData, token, videoDa
         <style>{css}</style>
       </Head>
       <Navbar navData={navData} className={'position-relative'} />
-      <div className="row" id="streamRow">
-        <div className={`video-left-div  ${!sideMenu && 'close'} ${hideDrop && 'hide'}`}>
-          <video
-            src={
-              (betweenDate && videoData[0]?.videoURL) ||
-              (beforeDate && videoData[0]?.videoURLbefore) ||
-              (AfterDate && videoData[0]?.videoURLafter)
-            }
-            controls
+      <div className="row" id="streamRow" ref={streamRowRef}>
+        <div className={`video-left-div  ${!sideMenu && 'close'} ${hideDrop && 'hide'}`} ref={videoDivRef}>
+
+          <VideoPlayer
+            videoRef={videoRef}
             id="streamingVideo"
+            crossorigin="anonymous"
             name="streamingVideo"
-            className="min-w-full"
-            poster={videoData[0]?.videoPoster?.data?.attributes?.url}
+            src={((betweenDate && videoData[0]?.videoURL) ||
+              (beforeDate && videoData[0]?.videoURLbefore) ||
+              (AfterDate && videoData[0]?.videoURLafter))}
           />
+
           {/* <button className={`comment-button btn btn-primary ${!sideMenu && 'd-none'}`} onClick={handleCommentMenu}><i className="fas fa-comment fa-lg"></i></button> */}
           <button className={`comment-button btn btn-primary ${!sideMenu && 'd-none'}`} onClick={handleCommentMenu}><BsChat size={24} /></button>
         </div>
@@ -461,7 +492,6 @@ export default function Video({ navData, footerData, profileData, token, videoDa
           </div>
         </div>
       </div>
-      <Footer footerData={footerData} />
     </>
   )
 }
@@ -510,7 +540,7 @@ export const getServerSideProps = async ({ req, query }) => {
       Authorization: `Bearer ${token}`
     }
   })
-  const data = await res.json()
+  const data = await res.json();
 
   const profileTickets = data?.purchases
     ?.filter((item) => item?.event?.id === videoData.data[0]?.id)
@@ -530,7 +560,7 @@ export const getServerSideProps = async ({ req, query }) => {
   console.log("This Ticket is " + JSON.stringify(thisTicket))
 
   const allowedToSee = videoToShow.filter((item) =>
-    profileTickets.some((ticket) => ticket?.eventTicketType === item?.ticketLevel)
+    profileTickets && profileTickets.some((ticket) => ticket?.eventTicketType === item?.ticketLevel)
   )
 
   if ((allowedToSee.length === 0) && (thisTicket.price != 0)) {

@@ -20,6 +20,11 @@
       "static/chunks/main.js",
       "static/chunks/pages/[eventSlug]/[diaryitemtitle].js"
     ],
+    "/[eventSlug]/venue": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/[eventSlug]/venue.js"
+    ],
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -30,10 +35,10 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/video": [
+    "/account": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/video.js"
+      "static/chunks/pages/account.js"
     ]
   },
   "ampFirstPages": []

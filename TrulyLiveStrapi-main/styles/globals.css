@@ -214,12 +214,12 @@ details[open] .faq-ans {
 }
 #streamRow {
   overflow: hidden;
-  height: 700px;
+  /* height: 700px; */
   background-color: rgba(0, 0, 0, 0.8);
 }
 .video-left-div {
   width: calc(100%) !important;
-  height: 700px;
+  /* height: 700px; */
   padding: 0 !important;
   position: relative;
   z-index: 20;
@@ -229,15 +229,16 @@ details[open] .faq-ans {
 }
 .video-left-div.close {
   width: calc(100% - 350px) !important;
-  height: 700px;
+  /* height: 700px; */
   padding: 0 !important;
   position: relative;
   transition: 0.4s all ease;
 }
 .video-left-div video {
-  max-height: 100% !important;
+  /*carl removed - damaging aspect
+  max-height: 100% !important;   */
   object-fit: fill;
-  min-height: 700px;
+  /* min-height: 700px; */
 }
 /* comments */
 .comments-div.close {
@@ -369,7 +370,7 @@ details[open] .faq-ans {
   .video-left-div video {
     min-height: 350px !important;
   }
-  .comments-div { 
+  .comments-div {
     height: 450px !important;
     width: 100% !important;
   }
@@ -430,4 +431,79 @@ span.emoji-div {
 }
 .Toastify__toast-container {
   z-index: 99999 !important;
+}
+.content-div {
+  width: calc(100% - 350px) !important;
+  padding: 20px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(6, 1fr);
+  grid-gap: 10px;
+}
+.chat-content-div {
+  width: 350px !important;
+  background-color: #f5f7fb;
+  padding: 10px 0;
+  min-height: 500px;
+}
+.user-container {
+  width: calc(100%);
+  height: 200px; 
+  margin: 10px 0;
+  text-align: center;
+}
+.user-container img {
+  width: 125px;
+  height: 125px;
+  background-color: #fff;
+  margin: 10px auto;
+  border-radius: 10px;
+  object-fit: contain !important;
+}
+.user-container .user-name {
+  font-size: 16px;
+  font-weight: 600;
+  display: block;
+  word-break: break-all;
+}
+@media screen and (max-width: 1500px) {
+  .content-div {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+@media screen and (max-width: 1150px) {
+  .content-div {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media screen and (max-width: 992px) {
+  .content-div {
+    width: calc(100%) !important;
+    grid-template-columns: repeat(4, 1fr);
+    max-height: 500px;
+    overflow-y: auto;
+  }
+  .content-div::-webkit-scrollbar {
+    display: none;
+  }
+  .chat-content-div {
+    width: calc(100%) !important;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+}
+@media screen and (max-width: 750px) {
+  .content-div {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media screen and (max-width: 500px) {
+  .content-div {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media screen and (max-width: 350px) {
+  .content-div {
+    grid-template-columns: repeat(1, 1fr);
+  }
 }

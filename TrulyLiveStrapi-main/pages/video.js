@@ -19,10 +19,8 @@ if (typeof window !== 'undefined') {
   });
 }
 //Chat server URL
-//const ChatEndPoint = "https://truly-live-chat-backend.vercel.app/";
-// const ChatEndPoint = "https://trulylivechatbackend.herokuapp.com/"
-const ChatEndPoint = "http://192.168.1.33:5000/"
-// 
+const ChatEndPoint = "https://trulylivechatbackend.herokuapp.com/"
+//const ChatEndPoint = "http://192.168.1.33:5000/"
 
 export default function Home({ navData, footerData, videoData, profileData, token, eventData }) {
   let router = useRouter();
@@ -37,7 +35,7 @@ export default function Home({ navData, footerData, videoData, profileData, toke
   const [emojiStatus, setEmojiStatus] = useState('unblock');
   const [currentUser, setCurrentUser] = useState({
     Name: profileData && profileData.username,
-    Image: profileData && profileData.image.url,
+    Image: profileData && profileData.image && profileData?.image.url,
     Email: profileData.email,
     isAdmin: profileData && profileData.isAdmin
   });

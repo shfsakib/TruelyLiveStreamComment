@@ -43,6 +43,12 @@ const LoginPage = ({ navData, footerData, userData }) => {
           <div className="bg-white shadow-2xl rounded-lg p-5 mt-10">
             <h1 className="text-2xl md:text-3xl text-center">LOGIN</h1>
             <form onSubmit={handleLogin}>
+              <p className="my-5">
+                No account?{' '}
+                <Link href="/register" className="underline">
+                  Register
+                </Link>{' '}
+              </p>
               <div className="my-5">
                 <label htmlFor="email">Email or Username</label>
                 <input
@@ -92,12 +98,6 @@ const LoginPage = ({ navData, footerData, userData }) => {
                 </div>
               </div>
             </form>
-            <p className="my-5">
-              No account?{' '}
-              <Link href="/register" className="underline">
-                Regsiter
-              </Link>{' '}
-            </p>
           </div>
         </div>
       </div>
